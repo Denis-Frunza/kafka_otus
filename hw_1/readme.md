@@ -81,3 +81,7 @@ producer.close()
 
 3. Producer
 ![Producer](./screenshots/messages.png)
+
+4. Consumer
+
+![Consumer](./screenshots/Consumer.png)

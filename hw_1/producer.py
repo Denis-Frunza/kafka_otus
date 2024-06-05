@@ -7,7 +7,7 @@ from kafka import KafkaProducer
 import json
 
 
-KAFKA_BROKER = '0.0.0.0:9092'
+KAFKA_BROKER = 'localhost:9092'
 
 producer = KafkaProducer(
     bootstrap_servers=[KAFKA_BROKER,],
