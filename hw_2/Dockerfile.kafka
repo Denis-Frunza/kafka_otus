@@ -1,0 +1,22 @@
+FROM confluentinc/cp-kafka:latest
+
+# Set up necessary environment variables
+ENV KAFKA_HOME=/usr/local/bin
+
+USER root
+
+COPY ./scripts/set_acls.sh /usr/local/bin/set_acls.sh
+RUN chmod +x /usr/local/bin/set_acls.sh
+
+COPY ./configs/jaas.conf /etc/kafka/jaas.conf
+RUN chown appuser:appuser /etc/kafka/jaas.conf
+
+COPY ./configs/admin.config /etc/kafka/admin.config
+RUN chown appuser:appuser /etc/kafka/admin.config
+
+# Ensure the Kafka directories have the correct permissions
+RUN mkdir -p /var/log/kafka \
+    && chown -R appuser:appuser /var/log/kafka /etc/kafka /var/lib/kafka /etc/confluent/docker /var/run /tmp
+
+
+USER appuser
