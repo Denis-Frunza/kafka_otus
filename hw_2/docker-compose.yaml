@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  kafka:
+    build:
+      context: .
+      dockerfile: Dockerfile.kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,SASL_PLAINTEXT:SASL_PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'SASL_PLAINTEXT://localhost:9092'
+      KAFKA_LISTENERS: 'SASL_PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29092'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'SASL_PLAINTEXT'
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: 'PLAIN'
+      KAFKA_SASL_ENABLED_MECHANISMS: 'PLAIN'
+      KAFKA_AUTHORIZER_CLASS_NAME: 'org.apache.kafka.metadata.authorizer.StandardAuthorizer'
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: 'true'
+      KAFKA_SUPER_USERS: 'User:admin'
+      KAFKA_NODE_ID: 1
+      CLUSTER_ID: 'ciWo7IWazngRchmPES6q5A=='
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29092'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_KRAFT_MODE: 'true'
+      KAFKA_METADATA_LOG_DIR: /var/lib/kafka/metadata
+      KAFKA_OPTS: '-Djava.security.auth.login.config=/etc/kafka/jaas.conf'
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+      - kafka-metadata:/var/lib/kafka/metadata
+      - kafka-logs:/var/log/kafka
+      - ./properties/producer_user1.properties:/etc/kafka/producer_user1.properties
+      - ./properties/producer_user2.properties:/etc/kafka/producer_user2.properties
+      - ./properties/producer_user3.properties:/etc/kafka/producer_user3.properties
+      - ./properties/consumer_user1.properties:/etc/kafka/consumer_user1.properties
+      - ./properties/consumer_user2.properties:/etc/kafka/consumer_user2.properties
+      - ./properties/consumer_user3.properties:/etc/kafka/consumer_user3.properties
+volumes:
+  kafka-data:
+  kafka-metadata:
+  kafka-logs:
