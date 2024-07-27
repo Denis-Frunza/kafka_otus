@@ -1,19 +1,17 @@
 TOPIC = 'ecommerce' 
 
 kafka_conf = {
-    'bootstrap.servers': 'kafka:29092',
+    'bootstrap.servers': 'kafka:9093',
     'client.id': 'e-commerce',
-    'security.protocol': 'SASL_PLAINTEXT',
-    'sasl.mechanisms': 'PLAIN',
-    'sasl.username': 'denis_frunza',
-    'sasl.password': 'password1',
+    'security.protocol': 'SSL',
     'acks': 'all',
     'retries': 5,
     'enable.idempotence': True,
     'delivery.timeout.ms': 3000,
     'request.timeout.ms': 5000,
-# 'security.protocol': 'SASL_SSL',
-# 'sasl.mechanisms': 'PLAIN',
-# 'sasl.username': '<API_KEY_HERE>',
-# 'sasl.password': '<API_SECRET_HERE>'
+    'ssl.ca.location': '/etc/kafka/secrets/server.ca.crt',
+    'ssl.certificate.location': '/etc/kafka/secrets/client-cert.pem',
+    'ssl.key.location': '/etc/kafka/secrets/client-key.pem',
+    'ssl.key.password': 'client-ks-password',
+    'ssl.endpoint.identification.algorithm': 'none'
 }

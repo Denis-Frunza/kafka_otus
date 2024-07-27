@@ -17,6 +17,12 @@ brands["PRICING"] = brands["PRICING"].apply(
     lambda x: float(x.replace("$", "").replace(",", ""))
 )
 
+def delivery_report(err, msg):
+    if err is not None:
+        print(f"Message delivery failed: {err}")
+    else:
+        print(f"Message delivered to {msg.topic()} [{msg.partition()}]")
+
 
 def get_pay_method(source, status_purchase, payment_modes, payment_store):
     if source == "Organic":
@@ -82,11 +88,10 @@ for index, row in brands.iterrows():
     )
     
     record_value = json.dumps(asdict(purchase)).encode('utf-8')
-
-    producer.produce(TOPIC, key="purchases", value=record_value)
+    print(record_value)
+    producer.produce(TOPIC, key="purchases", value=record_value, callback=delivery_report)
     producer.poll(0)
 
-    print(purchase)
     time.sleep(random.choice([1, 1.5]))
 
 producer.flush()
