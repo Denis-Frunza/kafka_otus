@@ -9,19 +9,20 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2182
       ZOOKEEPER_TICK_TIME: 2000
-  
+
   kafka:
     image: confluentinc/cp-kafka:5.5.1
     restart: "no"
     ports:
       - "9092:9092"
-      - "9093:9093" # Port for SSL connections
+      - "9093:9093" # Internal SSL connections
+      - "9094:9094" # External SSL connections
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2182
-      KAFKA_LISTENERS: "SSL://0.0.0.0:9093"
-      KAFKA_ADVERTISED_LISTENERS: "SSL://kafka:9093"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "SSL:SSL"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,SSL://0.0.0.0:9093,EXTERNAL_SSL://0.0.0.0:9094"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9092,SSL://kafka:9093,EXTERNAL_SSL://localhost:9094"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,SSL:SSL,EXTERNAL_SSL:SSL"
       KAFKA_INTER_BROKER_LISTENER_NAME: "SSL"
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -32,16 +33,14 @@ services:
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_SSL_KEYSTORE_LOCATION: "/etc/kafka/secrets/server.ks.jks"
       KAFKA_SSL_KEYSTORE_FILENAME: "server.ks.jks"
-      # KAFKA_SSL_KEYSTORE_PASSWORD: "server-ks-password"
-      # KAFKA_SSL_KEY_PASSWORD: "server-ks-password"
       KAFKA_SSL_KEYSTORE_TYPE: "JKS"
       KAFKA_SSL_TRUSTSTORE_LOCATION: "/etc/kafka/secrets/server.ts.jks"
-      # KAFKA_SSL_TRUSTSTORE_PASSWORD: "server-ts-password"
       KAFKA_SSL_TRUSTSTORE_TYPE: "JKS"
       KAFKA_SSL_KEYSTORE_CREDENTIALS: "keystore-creds"
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: "truststore-creds"
       KAFKA_SSL_KEY_CREDENTIALS: "key-creds"
       KAFKA_SSL_CLIENT_AUTH: "none"  # Disable client authentication
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
       CONFLUENT_METRICS_ENABLE: 'false'
     volumes:
       - kafka-data:/var/lib/kafka/data
@@ -52,15 +51,20 @@ services:
     #command: "sh -c '/etc/confluent/docker/run & /usr/bin/setup-acls.sh'"
     command: "sh -c '/etc/confluent/docker/run'"
 
-  # kafdrop:
-  #   image: obsidiandynamics/kafdrop
-  #   restart: "no"
-  #   ports:
-  #     - "9000:9000"
-  #   environment:
-  #     KAFKA_BROKERCONNECT: "kafka:9093"
-  #   depends_on:
-  #     - "kafka"
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    restart: "no"
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:9093"
+      KAFKA_PROPERTIES: "${KAFKA_PROPERTIES_BASE64}"
+      KAFKA_TRUSTSTORE: "${KAFKA_TRUSTSTORE_BASE64}"
+      KAFKA_KEYSTORE: "${KAFKA_KEYSTORE_BASE64}"
+    depends_on:
+      - kafka
+    volumes:
+      - ./ssl/kafdrop:/etc/kafka/secrets
 
   app:
     build:
