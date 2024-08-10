@@ -1,3 +1,5 @@
 state
 .vscode
 __pycache__
+apache-*
+ssl*
