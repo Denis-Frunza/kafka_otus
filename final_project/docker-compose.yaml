@@ -17,6 +17,7 @@ services:
       - "9092:9092"
       - "9093:9093" # Internal SSL connections
       - "9094:9094" # External SSL connections
+      - "7072:7072" # Expose JMX exporter port
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2182
@@ -42,12 +43,16 @@ services:
       KAFKA_SSL_CLIENT_AUTH: "none"  # Disable client authentication
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
       CONFLUENT_METRICS_ENABLE: 'false'
+      # KAFKA_JMX_PORT: 7072
+      KAFKA_OPTS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent.jar=7072:/usr/share/jmx_exporter/kafka.yml"
     volumes:
       - kafka-data:/var/lib/kafka/data
       - kafka-metadata:/var/lib/kafka/metadata
       - kafka-logs:/var/log/kafka
       - ./setup-acls.sh:/usr/bin/setup-acls.sh
       - ./ssl:/etc/kafka/secrets
+      - ./jmx_exporter/jmx_prometheus_javaagent.jar:/usr/share/jmx_exporter/jmx_prometheus_javaagent.jar
+      - ./jmx_exporter/kafka.yml:/usr/share/jmx_exporter/kafka.yml
     #command: "sh -c '/etc/confluent/docker/run & /usr/bin/setup-acls.sh'"
     command: "sh -c '/etc/confluent/docker/run'"
 
@@ -77,6 +82,16 @@ services:
       - grafana-storage:/var/lib/grafana
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: "no"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
 
   app:
     build:
